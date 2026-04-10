@@ -1,0 +1,32 @@
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+
+# State & logs
+state/*.json
+!state/.gitkeep
+logs/*.log
+logs/*.jsonl
+!logs/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
