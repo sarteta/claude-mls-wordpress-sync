@@ -1,0 +1,34 @@
+# Maps MLS (RESO-flavor) fields → WordPress post fields & meta.
+# Change your MLS vendor, only this file needs to move.
+
+post_fields:
+  title: ListingKey
+  content: PublicRemarks
+  status_rule: mls_status_to_wp_status   # see src/mapping.py for the function
+
+meta_fields:
+  price: ListPrice
+  bedrooms: BedroomsTotal
+  bathrooms: BathroomsTotalInteger
+  sqft: LivingArea
+  address: UnparsedAddress
+  city: City
+  postal_code: PostalCode
+  mls_status: MlsStatus
+  modification_ts: ModificationTimestamp
+  listing_agent_name: ListAgentFullName
+  listing_agent_phone: ListAgentPreferredPhone
+  listing_agent_email: ListAgentEmail
+
+# Rule: MLS statuses considered "publishable"
+publish_statuses:
+  - Active
+  - ActiveUnderContract
+
+# Rule: MLS statuses pushed as draft (never hard-deleted)
+draft_statuses:
+  - Pending
+  - Closed
+  - Expired
+  - Withdrawn
+  - Canceled
