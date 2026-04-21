@@ -31,22 +31,14 @@ Result: a 1,200-listing MLS that runs every 15 minutes typically touches <20 lis
 
 ## Architecture
 
+```mermaid
+flowchart LR
+    MLS[MLS provider<br/>RESO / Spark / Bridge / IDX] -->|GET paginated| ENG[sync engine<br/>MLSAdapter → Differ → WPClient]
+    ENG -->|POST changed only| WP[WordPress<br/>/wp/v2/listing]
+    ENG <--> ST[(state/listings.json<br/>SHA-256 per listing)]
 ```
-┌─────────────────┐         ┌──────────────────────┐         ┌──────────────────┐
-│   MLS provider  │         │  sync engine (this)  │         │     WordPress    │
-│  RESO / Spark   │ ──────► │                      │ ──────► │  /wp/v2/listing  │
-│  Bridge / IDX   │  GET    │  ┌────────────────┐  │  POST   │   (Custom Post)  │
-└─────────────────┘         │  │  MLSAdapter    │  │         └──────────────────┘
-                            │  │  StateStore    │  │
-                            │  │  Differ        │  │
-                            │  │  WPClient      │  │
-                            │  └────────────────┘  │
-                            └──────────────────────┘
-                                     │
-                                     ▼
-                             state/listings.json
-                             (SHA-256 per listing)
-```
+
+Lectura en español: [README.es.md](./README.es.md)
 
 ## Features
 
