@@ -1,8 +1,8 @@
 # claude-mls-wordpress-sync
 
-Diff-based sync engine that pulls real-estate listings from an MLS (RESO Web API / Bridge Interactive / Spark / IDX Broker) and pushes only **changed** listings into WordPress (Custom Post Type) via the WP REST API.
+Diff-based sync engine. Pulls real-estate listings from an MLS (RESO Web API / Bridge Interactive / Spark / IDX Broker) and pushes only the **changed** listings into WordPress (Custom Post Type) via the WP REST API.
 
-Built to be drop-in for coworking/brokerage sites that need MLS data fresh without hammering the origin API or duplicating listings on every cron run.
+Meant for brokerage sites that were either burning their MLS API quota on full re-syncs or losing custom fields every time the cron ran.
 
 > Demo data is synthetic (`Acme Realty`, `+1555...`). Plug your real MLS credentials in `.env` to sync a live feed.
 
@@ -10,13 +10,13 @@ Built to be drop-in for coworking/brokerage sites that need MLS data fresh witho
 
 ## Why this exists
 
-Most "MLS → WordPress" integrations I've seen in the wild do a **full overwrite on every cron**. That:
+Most "MLS → WordPress" integrations I've worked on do a full overwrite on
+every cron. That burns MLS API quota (Spark/Bridge rate-limit you in
+hours), it re-creates WP posts (kills SEO permalinks and wipes whatever
+custom fields staff edited), and it re-downloads every image on every
+run (sync goes from minutes to hours).
 
-- Wastes MLS API quota (hitting rate limits on Spark/Bridge in hours)
-- Re-creates/overwrites WordPress posts → breaks SEO permalinks, loses custom fields set by staff
-- Re-downloads images every time → minutes of sync turn into hours
-
-This project does a **diff sync**:
+This project does a diff sync:
 
 1. Pull listings from MLS (paginated, with `ModificationTimestamp` filter when supported)
 2. Load local state snapshot (`state/listings.json`) — `listing_id → content_hash`
@@ -135,6 +135,6 @@ Docker: `docker compose up -d` runs the sync loop internally every `SYNC_INTERVA
 
 MIT — see [LICENSE](./LICENSE).
 
----
-
-Built by [Santiago Arteta](https://github.com/sarteta) for real-estate integration work. Open to forks, issues, and consulting on custom MLS integrations.
+Built by [Santiago Arteta](https://github.com/sarteta) out of real-estate
+integration work. Forks and issues welcome; happy to consult on custom
+MLS feeds.
