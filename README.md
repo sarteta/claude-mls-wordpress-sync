@@ -1,73 +1,59 @@
-# claude-mls-wordpress-sync
+Why did I build this?
+Let's be honest: most "MLS → WordPress" integrations just blindly overwrite everything on every cron run. That’s a nightmare because:
 
-Diff-based sync engine. Pulls real-estate listings from an MLS (RESO Web API / Bridge Interactive / Spark / IDX Broker) and pushes only the **changed** listings into WordPress (Custom Post Type) via the WP REST API.
+It burns your MLS API quota (Spark and Bridge will rate-limit you fast).
 
-Meant for brokerage sites that were either burning their MLS API quota on full re-syncs or losing custom fields every time the cron ran.
+It deletes and recreates WP posts, which kills your SEO permalinks and wipes any custom data your agents added manually.
 
-> Demo data is synthetic (`Acme Realty`, `+1555...`). Plug your real MLS credentials in `.env` to sync a live feed.
+It re-downloads the same images every single time. A 5-minute sync turns into a 3-hour crawl.
 
----
+This script takes a smarter approach using a diff sync:
 
-## Why this exists
+Grabs the listings from the MLS (handling pagination and filtering by ModificationTimestamp if supported).
 
-Most "MLS → WordPress" integrations I've worked on do a full overwrite on
-every cron. That burns MLS API quota (Spark/Bridge rate-limit you in
-hours), it re-creates WP posts (kills SEO permalinks and wipes whatever
-custom fields staff edited), and it re-downloads every image on every
-run (sync goes from minutes to hours).
+Loads a local snapshot (state/listings.json) mapping listing_id to its content hash.
 
-This project does a diff sync:
+Figures out exactly what changed: created, updated, unchanged, or removed.
 
-1. Pull listings from MLS (paginated, with `ModificationTimestamp` filter when supported)
-2. Load local state snapshot (`state/listings.json`) — `listing_id → content_hash`
-3. Compute diff: `created | updated | unchanged | removed`
-4. Push only `created + updated` to WordPress via REST
-5. Mark `removed` as `status=draft` (never hard-delete — lets the broker review first)
-6. Persist new state snapshot atomically
+Pushes only the new or updated stuff to WordPress via the REST API.
 
-Result: a 1,200-listing MLS that runs every 15 minutes typically touches <20 listings per cycle.
+Drafts removed listings (it never hard-deletes, so the broker can review them first).
 
----
+Saves the new state atomically.
 
-## Architecture
+The result? A 1,200-listing MLS feed running every 15 minutes usually updates fewer than 20 posts per cycle. It's fast and light.
 
-```mermaid
 flowchart LR
     MLS[MLS provider<br/>RESO / Spark / Bridge / IDX] -->|GET paginated| ENG[sync engine<br/>MLSAdapter → Differ → WPClient]
     ENG -->|POST changed only| WP[WordPress<br/>/wp/v2/listing]
     ENG <--> ST[(state/listings.json<br/>SHA-256 per listing)]
-```
 
-Lectura en español: [README.es.md](./README.es.md)
 
-## Features
+What's under the hood?
+Drop-in MLS Adapters. Check out src/mls_adapters/ (reso.py, bridge.py, etc.). Switching providers is just a config tweak; you don't have to touch the core sync loop.
 
-- **Adapter pattern for MLS providers.** `src/mls_adapters/` has one file per provider (`reso.py`, `bridge.py`, `spark.py`, `mock.py`). Switching providers = config change, no code change in sync loop.
-- **Configurable field mapping.** `config/field_mapping.yaml` declares how MLS fields map to WP post fields + meta keys. Change vendor, just edit YAML.
-- **Idempotent.** Running sync twice in a row on an unchanged MLS = zero writes to WordPress.
-- **Exponential retry + dead-letter log.** Network failures retry 3x with backoff; permanent failures logged to `logs/dead-letter.jsonl` for human review.
-- **Async with `httpx.AsyncClient`.** Pulls + pushes are concurrent with semaphore-bounded parallelism.
-- **Zero-cost health endpoint.** `python -m src.health` prints last-sync timestamp, success rate last 24h, and dead-letter count — pipe to Slack/Uptime Kuma.
+No-code Field Mapping. How do MLS fields map to your WP setup? It's all in config/field_mapping.yaml. If you change vendors, just edit the YAML file.
 
-## Quickstart
+Idempotent. Run it twice in a row without MLS changes, and it won't make a single write to WordPress.
 
-```bash
+Built-in Resilience. Network hiccups? It retries 3x with an exponential backoff. Permanent failures get dumped to logs/dead-letter.jsonl so you can figure out what went wrong later.
+
+Fast & Async. Uses httpx.AsyncClient with bounded concurrency so it doesn't overwhelm your server or WordPress.
+
+Easy Health Checks. Run python -m src.health to get the last sync time, success rate, and dead-letter count. Super easy to pipe into Slack or Uptime Kuma.
+
+
+
 git clone https://github.com/sarteta/claude-mls-wordpress-sync.git
 cd claude-mls-wordpress-sync
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env                                  # edit creds
-python -m src.sync --provider mock --dry-run          # preview diff
-python -m src.sync --provider mock                    # actually sync
-```
+cp .env.example .env                                  # edit your creds here
+python -m src.sync --provider mock --dry-run          # preview the diff
+python -m src.sync --provider mock                    # actually sync it
 
-`--provider mock` uses the bundled synthetic feed so you can see the engine work before connecting a real MLS.
+--provider mock uses the bundled fake feed. Try it out to see the diff engine in action before hooking up your real MLS.
 
-## Configuration
-
-Everything lives in `.env` + `config/field_mapping.yaml`:
-
-```ini
 # .env
 MLS_PROVIDER=reso              # reso | bridge | spark | mock
 MLS_BASE_URL=https://api.example-mls.com
@@ -82,9 +68,8 @@ WP_POST_TYPE=listing
 SYNC_INTERVAL_MINUTES=15
 STATE_PATH=./state/listings.json
 LOG_LEVEL=INFO
-```
 
-```yaml
+
 # config/field_mapping.yaml
 post_fields:
   title: ListingKey
@@ -98,35 +83,35 @@ meta_fields:
   address: UnparsedAddress
   listing_agent_name: ListAgentFullName
   listing_agent_phone: ListAgentPreferredPhone
-```
 
-## Scheduling
 
-Linux cron:
-```
-*/15 * * * * cd /srv/claude-mls-sync && /srv/claude-mls-sync/.venv/bin/python -m src.sync >> logs/cron.log 2>&1
-```
+  */15 * * * * cd /srv/claude-mls-sync && /srv/claude-mls-sync/.venv/bin/python -m src.sync >> logs/cron.log 2>&1
 
-Windows Task Scheduler: use `scripts/run-sync.ps1`.
+  Windows Task Scheduler: Use the included scripts/run-sync.ps1.
 
-Docker: `docker compose up -d` runs the sync loop internally every `SYNC_INTERVAL_MINUTES`.
+Docker: docker compose up -d runs the sync loop internally every SYNC_INTERVAL_MINUTES.
 
-## Project status
+Roadmap
+[x] Core diff engine
 
-- [x] Core diff engine
-- [x] Mock adapter (synthetic feed for demos/tests)
-- [x] RESO Web API adapter
-- [x] WordPress REST client with app-password auth
-- [x] Field mapping via YAML
-- [x] Exponential retry + dead-letter
-- [ ] Spark API adapter (planned — next release)
-- [ ] Bridge Interactive adapter (planned)
-- [ ] Image diff + lazy download (planned)
+[x] Mock adapter (fake feed for testing)
 
-## License
+[x] RESO Web API adapter
 
-MIT — see [LICENSE](./LICENSE).
+[x] WP REST client (via app passwords)
 
-Built by [Santiago Arteta](https://github.com/sarteta) out of real-estate
-integration work. Forks and issues welcome; happy to consult on custom
-MLS feeds.
+[x] YAML field mapping
+
+[x] Exponential retries & dead-letter logging
+
+[ ] Spark API adapter (up next)
+
+[ ] Bridge Interactive adapter (planned)
+
+[ ] Image diffing + lazy downloads (planned)
+
+License & Credits
+MIT License — see LICENSE.
+
+Built by Santiago Arteta after dealing with one too many broken real estate integrations. Forks and pull requests are welcome! If you need help untangling a weird custom MLS feed, feel free to reach out.
+
