@@ -1,4 +1,15 @@
-Why did I build this?
+# claude-mls-wordpress-sync
+
+[![tests](https://github.com/sarteta/claude-mls-wordpress-sync/actions/workflows/tests.yml/badge.svg)](https://github.com/sarteta/claude-mls-wordpress-sync/actions/workflows/tests.yml)
+[![python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://www.python.org)
+[![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
+
+Diff-based sync engine: MLS listings (RESO / Bridge / Spark / mock adapter) → WordPress Custom Post Type via the REST API. Python async, YAML-driven field mapping, atomic state store, dead-letter log.
+
+![demo](./examples/demo.png)
+
+## Why did I build this?
+
 Let's be honest: most "MLS → WordPress" integrations just blindly overwrite everything on every cron run. That’s a nightmare because:
 
 It burns your MLS API quota (Spark and Bridge will rate-limit you fast).
