@@ -1,4 +1,4 @@
-"""Mock adapter — returns a synthetic RESO-shaped feed so the sync engine
+"""Mock adapter -- returns a synthetic RESO-shaped feed so the sync engine
 runs end-to-end without needing a real MLS account. Used in tests and demos.
 """
 from __future__ import annotations
@@ -53,8 +53,8 @@ def _fake_listing(idx: int, drift: int = 0) -> dict:
 class MockAdapter:
     def __init__(self, page_size: int = 200, total: int = 12, churn: float = 0.25):
         """
-        `total` — how many listings the mock MLS "has".
-        `churn` — fraction of listings that change payload each fetch, so the
+        `total` -- how many listings the mock MLS "has".
+        `churn` -- fraction of listings that change payload each fetch, so the
                   diff engine has something to do.
         """
         self.page_size = page_size

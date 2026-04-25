@@ -51,7 +51,7 @@ async def _run(provider: str, dry_run: bool) -> int:
     # adapter supports incremental fetch. Mock always does a full fetch.
     since = max(previous.values(), default=None) if provider != "mock" else None
     # NOTE: `previous` stores hashes; for incremental we'd track the max
-    # ModificationTimestamp in a separate key — kept simple here.
+    # ModificationTimestamp in a separate key -- kept simple here.
 
     current = await adapter.fetch_all(since=None)
     result = diff(previous, current)
@@ -62,7 +62,7 @@ async def _run(provider: str, dry_run: bool) -> int:
         return 0
 
     if not result.has_writes:
-        logger.info("nothing to do — WordPress already in sync.")
+        logger.info("nothing to do -- WordPress already in sync.")
         return 0
 
     wp = WPClient(
@@ -80,7 +80,7 @@ async def _run(provider: str, dry_run: bool) -> int:
     drafts = [wp.mark_draft(k) for k in result.removed]
     await asyncio.gather(*writes, *drafts)
 
-    # Only persist state after all writes completed — if this run was
+    # Only persist state after all writes completed -- if this run was
     # interrupted mid-batch, next run will re-push the same diff idempotently.
     state.save_atomic(new_state(previous, current))
     logger.info("state saved: %d entries", len(current))

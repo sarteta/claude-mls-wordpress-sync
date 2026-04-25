@@ -1,6 +1,6 @@
 """WordPress REST client.
 
-- Auth: app passwords (HTTPS basic) — don't use real admin passwords.
+- Auth: app passwords (HTTPS basic) -- don't use real admin passwords.
 - Finds existing post by meta key `_mls_listing_key` so our engine can PATCH
   instead of POST-duplicate on every run.
 - Dead-letter write on permanent failures so a bad payload doesn't stall

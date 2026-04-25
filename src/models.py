@@ -1,4 +1,4 @@
-"""Domain models — intentionally thin, work across all MLS vendors."""
+"""Domain models -- intentionally thin, work across all MLS vendors."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

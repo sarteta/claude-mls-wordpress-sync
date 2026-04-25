@@ -17,12 +17,12 @@ That introduces three concrete costs:
    full-overwrite importer wipes that work every 15 minutes.
 
 The diff engine compares SHA-256 hashes of the full MLS payload against the
-previous snapshot. If the hash matches, we do nothing — even the HTTP call
+previous snapshot. If the hash matches, we do nothing -- even the HTTP call
 to WP is skipped.
 
 ## Why "removed" → draft, never delete
 
-Brokers hate when a listing disappears from their site silently — it's
+Brokers hate when a listing disappears from their site silently -- it's
 typically a data glitch at the MLS end (stale `MlsStatus` flip, paging bug)
 rather than an actual delisting. Marking `status=draft` keeps the post
 recoverable and flags it for human review on the WP dashboard. If the

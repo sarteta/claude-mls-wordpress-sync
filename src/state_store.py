@@ -18,7 +18,7 @@ from .models import Listing
 def content_hash(listing: Listing) -> str:
     """Stable hash of the raw listing payload.
 
-    Sorting keys is what makes this deterministic — without it the same
+    Sorting keys is what makes this deterministic -- without it the same
     listing would get a different hash every fetch.
     """
     payload = json.dumps(listing.raw, sort_keys=True, default=str).encode("utf-8")

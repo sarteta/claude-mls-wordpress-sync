@@ -1,4 +1,4 @@
-"""Cheap health check — call from a cron or Uptime Kuma HTTP endpoint."""
+"""Cheap health check -- call from a cron or Uptime Kuma HTTP endpoint."""
 from __future__ import annotations
 
 import json

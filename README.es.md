@@ -22,10 +22,10 @@ mano) y re-baja cada imagen cada vez (el sync pasa de minutos a horas).
 Este proyecto hace diff sync:
 
 1. Trae listings del MLS (paginado, con filtro `ModificationTimestamp` cuando el provider lo soporta)
-2. Carga el snapshot local (`state/listings.json`) — `listing_id → content_hash`
+2. Carga el snapshot local (`state/listings.json`) -- `listing_id → content_hash`
 3. Calcula diff: `created | updated | unchanged | removed`
 4. Empuja a WordPress vía REST solo `created + updated`
-5. Marca los `removed` como `status=draft` (nunca hard-delete — primero que el broker revise)
+5. Marca los `removed` como `status=draft` (nunca hard-delete -- primero que el broker revise)
 6. Persiste el nuevo snapshot atómicamente
 
 Resultado: un MLS de 1.200 listings corriendo cada 15 minutos
@@ -48,7 +48,7 @@ típicamente toca <20 listings por ciclo.
   paralelismo acotado por semáforo.
 - **Endpoint de health sin costo.** `python -m src.health` imprime
   último timestamp de sync, success rate de las últimas 24h, y count
-  de dead-letter — piped a Slack / Uptime Kuma.
+  de dead-letter -- piped a Slack / Uptime Kuma.
 
 ## Quickstart
 
@@ -85,13 +85,13 @@ Docker: `docker compose up -d` corre el loop internamente cada
 - [x] Cliente WordPress REST con app-password
 - [x] Field mapping vía YAML
 - [x] Retry exponencial + dead-letter
-- [ ] Adapter Spark API (planeado — próxima release)
+- [ ] Adapter Spark API (planeado -- próxima release)
 - [ ] Adapter Bridge Interactive (planeado)
 - [ ] Diff de imágenes + lazy download (planeado)
 
 ## Licencia
 
-MIT — ver [LICENSE](./LICENSE).
+MIT -- ver [LICENSE](./LICENSE).
 
 Armado por [Santiago Arteta](https://github.com/sarteta) a partir de
 trabajo de integración en real-estate. Forks e issues bienvenidos;
